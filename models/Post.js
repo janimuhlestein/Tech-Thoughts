@@ -1,9 +1,8 @@
 const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/connection');
-const { underscoredIf } = require('sequelize/lib/utils');
 
 class Post extends Model {
-
+   
 }
 
 Post.init(
@@ -22,15 +21,19 @@ Post.init(
             type: DataTypes.STRING,
             allowNull: true,
             validate: {
-                isURL: true
+                isUrl: true
             }
         },
         post_text: {
             type: DataTypes.STRING,
             allowNull: false,
+            validate: {
+                len: [0, 500]
+            }
         },
         user_id: {
             type: DataTypes.INTEGER,
+            allowNull: false,
             references: {
                 model: 'user',
                 key: 'id'
