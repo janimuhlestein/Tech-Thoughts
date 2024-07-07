@@ -1,10 +1,13 @@
 const router = require('express').Router();
-const { Post, User } = require('../../models');
+const { Post, User, Vote } = require('../../models');
+const sequelize = require('../../config/connection');
 
 //get all posts
 router.get('/', (req, res) => {
     Post.findAll({
-        attributes: ['id', 'post_url', 'post_text', 'title', 'created_at'],
+        attributes: ['id', 'post_url', 'post_text', 'title', 'created_at',
+            [sequelize.literal('(SELECT COUNT(*) FROM vote WHERE post.id = vote.post_id)'), 'vote_count']
+        ],
         order: [['created_at', 'DESC']],
         include: [
             {
@@ -22,22 +25,8 @@ router.get('/', (req, res) => {
 
 //get one post
 router.get('/:id', (req, res) => {
-    Post.findOne({
-        attributes: ['id', 'post_url', 'post_text', 'title', 'created_at'],
-        include: [
-            {
-                model: User,
-                attributes: ['username']
-            }
-        ]
-    })
-    .then(dbPostData => {
-        if (!dbPostData) {
-            res.status(404).json({ message: 'No post found with this id!' });
-            return;
-        }
-        res.json(dbPostData);
-    })
+    Post.upvote(req.body, { Vote })
+    .then(updatedPostData => res.json(updatedPostData))
     .catch(err => {
         console.log(err);
         res.status(500).json(err);
@@ -57,6 +46,34 @@ router.post('/', (req, res) => {
         console.log(err);
         res.status(500).json(err);
     })
+});
+
+//put /api/posts/vote
+router.put('/upvote', (req, res) => {
+    Vote.create({
+        user_id: req.body.user_id,
+        post_id: req.body.post_id
+    })
+    .then(() => {
+        return Post.findOne({
+            where: {
+                id: req.body.post_id
+            },
+            attributes: [
+                'id',
+                'post_url',
+                'title',
+                'post_text',
+                'created_at',
+                [sequelize.literal('(SELECT Count(*) FROM vote WHERE post.id = vote.post_id)'), 'vote_count']
+            ]
+        })
+    })
+    .then(dbPostData => res.json(dbPostData))
+    .catch(err => {
+        console.log(err);
+        res.status(500).json(err);
+    });
 });
 
 //update a post
