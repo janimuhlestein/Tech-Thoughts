@@ -7,7 +7,8 @@ body, html {
     padding: 0;
     margin: 0;
     font-family:Georgia, 'Times New Roman', Times, serif;
-    color:darkblue;
+    font-size:medium;
+    color:darkslategray;
 }
 
 a {
@@ -79,6 +80,6 @@ main {
 
 .post .title span {
     font-style: italic;
-    font-size: 90%;
+    font-size: 120%;
     color: #7d7d7d;
 }
